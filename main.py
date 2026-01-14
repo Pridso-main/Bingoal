@@ -17,7 +17,7 @@ class BingoalApp(ctk.CTk):
         # --- État de l'application ---
         self.current_frame = None
         self.config_path = "data/bingo_config.json"
-        self.csv_path = "data/Bingo 2026 - Feuille 1.csv"
+        self.csv_path = "data/bingo_fun.csv"
 
         # --- Lancement ---
         self.verifier_etat_initial()
@@ -33,13 +33,20 @@ class BingoalApp(ctk.CTk):
 
     def lancer_phase_setup(self):
         """Affiche l'écran de configuration (Phase 1)."""
-        # On tente d'extraire les données du CSV fourni
+        
+        # On essaie de lire le CSV, mais ce n'est plus grave s'il n'est pas là
+        print("🔍 Recherche d'un fichier CSV pour pré-remplir...")
         donnees_csv = extraire_donnees_csv(self.csv_path)
         
+        if donnees_csv:
+            print("✅ CSV trouvé ! Pré-remplissage du formulaire.")
+        else:
+            print("⚪ Aucun CSV trouvé. Ouverture du formulaire vierge.")
+
         if self.current_frame:
             self.current_frame.destroy()
 
-        # On passe le callback pour lancer le jeu après la sauvegarde
+        # Si donnees_csv est None, SetupScreen affichera des champs vides
         self.current_frame = SetupScreen(
             master=self, 
             initial_data=donnees_csv,

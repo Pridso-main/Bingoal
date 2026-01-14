@@ -2,164 +2,164 @@
     "version": "1.0",
     "objectifs": [
         {
-            "titre": "Dry January",
-            "poids": 2,
-            "valide": false,
-            "date_validation": null
-        },
-        {
-            "titre": "Sortir une voie en 8a",
-            "poids": 3,
-            "valide": false,
-            "date_validation": null
-        },
-        {
-            "titre": "Acheter une tenue \"Ville\" (Zéro Gore-Tex / Millet)",
+            "titre": "Manger une pizza ananas",
             "poids": 1,
             "valide": false,
             "date_validation": null
         },
         {
-            "titre": "Me faire percé l'oreille",
+            "titre": "Parler à un pigeon",
+            "poids": 1,
+            "valide": true,
+            "date_validation": "2026-01-14 23:19:15"
+        },
+        {
+            "titre": "Survivre à un Lundi",
             "poids": 1,
             "valide": false,
             "date_validation": null
         },
         {
-            "titre": "Continuer a alimenter mon GitHub de projet",
-            "poids": 2,
-            "valide": false,
-            "date_validation": null
-        },
-        {
-            "titre": "Signer mon contrat d'alternance",
-            "poids": 3,
-            "valide": false,
-            "date_validation": null
-        },
-        {
-            "titre": "Mettre 2000€ de côté (Compte bloqué)",
-            "poids": 3,
-            "valide": false,
-            "date_validation": null
-        },
-        {
-            "titre": "Vacances Full Grimpe Outdoor avec les potes",
-            "poids": 2,
-            "valide": false,
-            "date_validation": null
-        },
-        {
-            "titre": "Un sport supplémentaire pour compléter l'escalade",
-            "poids": 2,
-            "valide": false,
-            "date_validation": null
-        },
-        {
-            "titre": "Dopamine Detox : 1 mois sans Scroll/🌽",
-            "poids": 3,
-            "valide": false,
-            "date_validation": null
-        },
-        {
-            "titre": "Apprendre une nouvelle techno (Docker/K8s..?)",
-            "poids": 2,
-            "valide": false,
-            "date_validation": null
-        },
-        {
-            "titre": "Aller en date (bien habillé !)",
-            "poids": 2,
-            "valide": false,
-            "date_validation": null
-        },
-        {
-            "titre": "CASE BONUS :  Vivre jusqu'a l'année prochaine",
-            "poids": 3,
-            "valide": false,
-            "date_validation": null
-        },
-        {
-            "titre": "Faire une Video/Story (Ascencions Escalade Style Mellow)",
-            "poids": 3,
-            "valide": false,
-            "date_validation": null
-        },
-        {
-            "titre": "Déployer un Home Lab ou Serveur perso",
-            "poids": 2,
-            "valide": false,
-            "date_validation": null
-        },
-        {
-            "titre": "Payer une tournée (avec tes économies)",
+            "titre": "Faire un commit sans bug",
             "poids": 1,
             "valide": false,
             "date_validation": null
         },
         {
-            "titre": "Zéro téléphone dans le lit (1 semaine)",
+            "titre": "Caresser un chien",
             "poids": 1,
             "valide": false,
             "date_validation": null
         },
         {
-            "titre": "Cuisiner 3 repas sains dans la semaine",
-            "poids": 3,
-            "valide": false,
-            "date_validation": null
-        },
-        {
-            "titre": "Faire des Etirements et du Yoga",
-            "poids": 2,
-            "valide": false,
-            "date_validation": null
-        },
-        {
-            "titre": "Engager des conversations sympa avec des inconnues !",
-            "poids": 2,
-            "valide": false,
-            "date_validation": null
-        },
-        {
-            "titre": "Soirée élégante avec le groupe",
+            "titre": "Voir un OVNI",
             "poids": 1,
             "valide": false,
             "date_validation": null
         },
         {
-            "titre": "Donner/Vendre vieux matos ou fringues",
+            "titre": "Boire 3L d'eau",
             "poids": 1,
             "valide": false,
             "date_validation": null
         },
         {
-            "titre": "Réussir mes Partiels R&T",
+            "titre": "Ignorer un appel spam",
             "poids": 1,
             "valide": false,
             "date_validation": null
         },
         {
-            "titre": "Dons du sang une fois par mois si possible",
+            "titre": "Nettoyer sa souris",
             "poids": 1,
             "valide": false,
             "date_validation": null
         },
         {
-            "titre": "Brevets fédéraux d'escalade (ouverture et equiper) ",
+            "titre": "Sortir les poubelles (en pyjama)",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Gagner au loto (facile)",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Toucher son nez avec sa langue",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "CASE GRATUITE (Triche)",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Lire un livre (sans images)",
+            "poids": 1,
+            "valide": true,
+            "date_validation": "2026-01-14 23:19:15"
+        },
+        {
+            "titre": "Ne pas scroller TikTok pendant 1h",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Inventer un mot",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Faire la vaisselle tout de suite",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Crier 'Bingo' dans la rue",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Dormir 10h d'affilée",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Rire tout seul",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Adopter un caillou",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Marcher pieds nus dans l'herbe",
+            "poids": 1,
+            "valide": true,
+            "date_validation": "2026-01-14 23:19:16"
+        },
+        {
+            "titre": "Chanter sous la douche",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Faire 1 pompe (juste une)",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Finir ce Bingo stupide",
             "poids": 1,
             "valide": false,
             "date_validation": null
         }
     ],
     "recompenses": {
-        "bronze": "Recompense Bronze",
-        "argent": "Recompense Argent",
-        "or": "Recompense OR",
-        "platine": "Saut en parachute"
+        "bronze": "Une sucette",
+        "argent": "Un Kebab complet Chef",
+        "or": "IGNE",
+        "platine": "Un voyage sur Mars Aller simple"
     },
     "stats": {
-        "total_poids": 48,
+        "total_poids": 25,
         "date_creation": "2026-01-14"
     }
 }

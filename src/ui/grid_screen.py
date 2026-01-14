@@ -37,8 +37,9 @@ class BingoTile(ctk.CTkButton):
 
 
 class GridScreen(ctk.CTkFrame):
-    def __init__(self, master):
+    def __init__(self, master, on_recap_callback=None): # <--- CORRECTION ICI
         super().__init__(master)
+        self.on_recap_callback = on_recap_callback      # <--- ET ICI
         
         self.config_file = "data/bingo_config.json"
         
@@ -55,12 +56,10 @@ class GridScreen(ctk.CTkFrame):
 
     def get_days_remaining(self):
         """Calcule le nombre de jours restants jusqu'à la fin de 2026."""
-        # Date cible : 31 Décembre 2026
         target_date = datetime(2026, 12, 31)
         now = datetime.now()
-        
         delta = target_date - now
-        return max(0, delta.days) # On ne retourne pas de négatif
+        return max(0, delta.days)
 
     def setup_ui(self):
         self.grid_columnconfigure(0, weight=3)
@@ -72,25 +71,35 @@ class GridScreen(ctk.CTkFrame):
         self.header_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.header_frame.grid(row=0, column=0, columnspan=2, sticky="ew", padx=20, pady=(20, 10))
         
-        # On divise le header en 2 colonnes : Gauche (Progression), Droite (Temps)
         self.header_frame.grid_columnconfigure(0, weight=1)
         self.header_frame.grid_columnconfigure(1, weight=1)
 
-        # 1. Label Progression (Gauche)
+        # 1. Label Progression
         self.lbl_progress = ctk.CTkLabel(self.header_frame, text="Progression : 0%", font=("Arial", 20, "bold"))
         self.lbl_progress.grid(row=0, column=0, sticky="w")
 
-        # 2. Label Compte à rebours (Droite)
+        # 2. Label Compte à rebours
         jours_restants = self.get_days_remaining()
         self.lbl_timer = ctk.CTkLabel(
             self.header_frame, 
             text=f"⏳ J-{jours_restants}", 
             font=("Arial", 20, "bold"),
-            text_color="#e74c3c" if jours_restants < 100 else "#3498db" # Rouge si urgence (<100 jours)
+            text_color="#e74c3c" if jours_restants < 100 else "#3498db"
         )
         self.lbl_timer.grid(row=0, column=1, sticky="e")
 
-        # 3. Barre de progression (Dessous, prend toute la largeur)
+        # 3. Bouton Historique
+        self.btn_history = ctk.CTkButton(
+            self.header_frame, 
+            text="📜 Historique", 
+            width=100,
+            fg_color="#8e44ad", 
+            hover_color="#9b59b6",
+            command=self.open_recap
+        )
+        self.btn_history.grid(row=0, column=2, sticky="e", padx=10)
+
+        # 4. Barre de progression
         self.progress_bar = ctk.CTkProgressBar(self.header_frame, height=20)
         self.progress_bar.set(0)
         self.progress_bar.grid(row=1, column=0, columnspan=2, sticky="ew", pady=10)
@@ -130,6 +139,10 @@ class GridScreen(ctk.CTkFrame):
             lbl_reward.pack(anchor="w", padx=10)
             
             self.reward_widgets[key] = (lbl_title, lbl_reward)
+
+    def open_recap(self): # <--- CORRECTION : Bien aligné à gauche
+        if self.on_recap_callback:
+            self.on_recap_callback()
 
     def toggle_objective(self, index):
         current_state = self.objectifs[index]['valide']
