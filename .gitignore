@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Données et Logs
+*.log
+save_progress.json
+
+# IDE
+.vscode/
+.idea/
