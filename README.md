@@ -33,7 +33,7 @@ L'application ne se contente pas de compter les cases : elle calcule un score po
 
 1.  **Cloner le projet**
     ```bash
-    git clone [https://github.com/VOTRE-PSEUDO/Bingoal.git](https://github.com/VOTRE-PSEUDO/Bingoal.git)
+    git clone [https://github.com/Pridso-main/Bingoal](https://github.com/Pridso-main/Bingoal.git)
     cd Bingoal
     ```
 
