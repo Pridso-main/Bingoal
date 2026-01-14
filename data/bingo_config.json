@@ -1,0 +1,165 @@
+{
+    "version": "1.0",
+    "objectifs": [
+        {
+            "titre": "Dry January",
+            "poids": 2,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Sortir une voie en 8a",
+            "poids": 3,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Acheter une tenue \"Ville\" (Zéro Gore-Tex / Millet)",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Me faire percé l'oreille",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Continuer a alimenter mon GitHub de projet",
+            "poids": 2,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Signer mon contrat d'alternance",
+            "poids": 3,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Mettre 2000€ de côté (Compte bloqué)",
+            "poids": 3,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Vacances Full Grimpe Outdoor avec les potes",
+            "poids": 2,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Un sport supplémentaire pour compléter l'escalade",
+            "poids": 2,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Dopamine Detox : 1 mois sans Scroll/🌽",
+            "poids": 3,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Apprendre une nouvelle techno (Docker/K8s..?)",
+            "poids": 2,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Aller en date (bien habillé !)",
+            "poids": 2,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "CASE BONUS :  Vivre jusqu'a l'année prochaine",
+            "poids": 3,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Faire une Video/Story (Ascencions Escalade Style Mellow)",
+            "poids": 3,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Déployer un Home Lab ou Serveur perso",
+            "poids": 2,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Payer une tournée (avec tes économies)",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Zéro téléphone dans le lit (1 semaine)",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Cuisiner 3 repas sains dans la semaine",
+            "poids": 3,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Faire des Etirements et du Yoga",
+            "poids": 2,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Engager des conversations sympa avec des inconnues !",
+            "poids": 2,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Soirée élégante avec le groupe",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Donner/Vendre vieux matos ou fringues",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Réussir mes Partiels R&T",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Dons du sang une fois par mois si possible",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        },
+        {
+            "titre": "Brevets fédéraux d'escalade (ouverture et equiper) ",
+            "poids": 1,
+            "valide": false,
+            "date_validation": null
+        }
+    ],
+    "recompenses": {
+        "bronze": "Recompense Bronze",
+        "argent": "Recompense Argent",
+        "or": "Recompense OR",
+        "platine": "Saut en parachute"
+    },
+    "stats": {
+        "total_poids": 48,
+        "date_creation": "2026-01-14"
+    }
+}
