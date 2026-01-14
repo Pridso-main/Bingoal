@@ -4,92 +4,162 @@ from datetime import datetime
 
 class BingoTile(ctk.CTkButton):
     """
-    Une case de Bingo. C'est un bouton qui change de couleur quand on clique dessus.
+    Une tuile de Bingo intelligente (Switch ON/OFF).
     """
     def __init__(self, master, index, data, on_click_callback):
         self.index = index
-        self.data = data
+        self.poids = data['poids']
+        self.titre = data['titre']
         self.callback = on_click_callback
         
-        # Définition de la couleur selon la difficulté (Poids)
-        # 1 étoile = Vert, 2 étoiles = Jaune/Or, 3 étoiles = Rouge
-        colors = {1: "#27ae60", 2: "#f39c12", 3: "#c0392b"}
-        base_color = colors.get(data['poids'], "#3498db")
+        # Sauvegarde de la couleur d'origine pour pouvoir la remettre si on décoche
+        self.colors = {1: "#27ae60", 2: "#f39c12", 3: "#c0392b"}
+        self.base_color = self.colors.get(self.poids, "#3498db")
 
-        # Texte du bouton : Titre + Etoiles
-        texte_bouton = f"{data['titre']}\n{'★' * data['poids']}"
-        
-        # Si la case est déjà validée, on la grise
-        etat = "normal"
-        couleur = base_color
-        if data['valide']:
-            etat = "disabled"
-            couleur = "#2c3e50" # Gris foncé
-            texte_bouton = f"✅\n{data['titre']}"
-
+        # Initialisation du bouton
         super().__init__(
             master,
-            text=texte_bouton,
-            font=("Arial", 12, "bold"),
-            fg_color=couleur,
-            height=80, # Hauteur de la case
-            command=self.action_clic,
-            state=etat
+            font=("Arial", 11, "bold"),
+            border_width=2,
+            border_color="#34495e",
+            hover_color="#34495e",
+            command=self.on_click
         )
+        
+        # On applique l'état visuel initial (Coché ou non)
+        self.update_visuals(data['valide'])
 
-    def action_clic(self):
-        """Quand on clique, on appelle la fonction de validation du parent"""
+    def on_click(self):
+        # On prévient le parent (GridScreen) qu'on a cliqué
         self.callback(self.index)
 
+    def update_visuals(self, is_valid):
+        """Met à jour l'aspect du bouton selon son état"""
+        if is_valid:
+            # Mode "Validé" : Gris foncé, Checkmark
+            self.configure(
+                fg_color="#2c3e50", 
+                text=f"✅\n{self.titre}"
+            )
+        else:
+            # Mode "Non validé" : Couleur d'origine, Etoiles
+            self.configure(
+                fg_color=self.base_color, 
+                text=f"{self.titre}\n{'★' * self.poids}"
+            )
 
 class GridScreen(ctk.CTkFrame):
-    """
-    L'écran principal du jeu avec la grille 5x5
-    """
     def __init__(self, master):
         super().__init__(master)
         
         self.config_file = "data/bingo_config.json"
         
-        # 1. Chargement des données
+        # Chargement
         with open(self.config_file, "r", encoding="utf-8") as f:
-            self.data_global = json.load(f)
-            self.objectifs = self.data_global["objectifs"]
+            self.full_data = json.load(f)
+        
+        self.objectifs = self.full_data['objectifs']
+        self.recompenses = self.full_data['recompenses']
+        self.total_weight = sum(obj['poids'] for obj in self.objectifs)
 
-        # 2. Barre de titre et progression (Simplifié pour ce test)
-        self.label_info = ctk.CTkLabel(self, text="Mon Bingoal 2026", font=("Arial", 24, "bold"))
-        self.label_info.pack(pady=20)
+        self.setup_ui()
+        self.update_progress_display()
 
-        # 3. La Grille
-        self.frame_grille = ctk.CTkFrame(self)
-        self.frame_grille.pack(fill="both", expand=True, padx=20, pady=20)
+    def setup_ui(self):
+        self.grid_columnconfigure(0, weight=3)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=10)
 
-        # Configuration de la grille 5x5 (poids égal pour centrer)
+        # HEADER
+        self.header_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.header_frame.grid(row=0, column=0, columnspan=2, sticky="ew", padx=20, pady=(20, 10))
+        
+        self.lbl_progress = ctk.CTkLabel(self.header_frame, text="Progression : 0%", font=("Arial", 20, "bold"))
+        self.lbl_progress.pack(anchor="w")
+
+        self.progress_bar = ctk.CTkProgressBar(self.header_frame, height=20)
+        self.progress_bar.set(0)
+        self.progress_bar.pack(fill="x", pady=5)
+
+        # GRILLE
+        self.grid_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.grid_frame.grid(row=1, column=0, sticky="nsew", padx=20, pady=10)
+        
         for i in range(5):
-            self.frame_grille.grid_columnconfigure(i, weight=1)
-            self.frame_grille.grid_rowconfigure(i, weight=1)
+            self.grid_frame.grid_columnconfigure(i, weight=1)
+            self.grid_frame.grid_rowconfigure(i, weight=1)
 
-        # Création des 25 boutons
-        self.boutons = []
+        self.tiles = []
         for i, obj in enumerate(self.objectifs):
-            row = i // 5
-            col = i % 5
+            # Note : On passe la méthode toggle_objective
+            tile = BingoTile(self.grid_frame, i, obj, self.toggle_objective)
+            tile.grid(row=i//5, column=i%5, padx=5, pady=5, sticky="nsew")
+            self.tiles.append(tile)
+
+        # SIDEBAR
+        self.sidebar = ctk.CTkFrame(self, fg_color="gray20", corner_radius=15)
+        self.sidebar.grid(row=1, column=1, sticky="nsew", padx=20, pady=10)
+        
+        ctk.CTkLabel(self.sidebar, text="🏆 Paliers & Cadeaux", font=("Arial", 16, "bold")).pack(pady=20)
+        
+        self.reward_widgets = {}
+        paliers_order = ["bronze", "argent", "or", "platine"]
+        emojis = {"bronze": "🥉", "argent": "🥈", "or": "🥇", "platine": "💎"}
+        
+        for key in paliers_order:
+            container = ctk.CTkFrame(self.sidebar, fg_color="transparent")
+            container.pack(fill="x", padx=10, pady=10)
             
-            btn = BingoTile(self.frame_grille, i, obj, self.valider_case)
-            btn.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
-            self.boutons.append(btn)
+            lbl_title = ctk.CTkLabel(container, text=f"{emojis[key]} {key.capitalize()}", font=("Arial", 14, "bold"), text_color="gray")
+            lbl_title.pack(anchor="w")
+            
+            lbl_reward = ctk.CTkLabel(container, text=self.recompenses.get(key, "???"), font=("Arial", 12), text_color="gray60", wraplength=180, justify="left")
+            lbl_reward.pack(anchor="w", padx=10)
+            
+            self.reward_widgets[key] = (lbl_title, lbl_reward)
 
-    def valider_case(self, index):
-        """Marque une case comme validée et sauvegarde"""
-        print(f"✅ Case {index} validée !")
+    def toggle_objective(self, index):
+        """Active ou Désactive une case"""
+        # 1. Inversion de l'état (True -> False ou False -> True)
+        current_state = self.objectifs[index]['valide']
+        new_state = not current_state
         
-        # Mise à jour des données en mémoire
-        self.objectifs[index]['valide'] = True
-        self.objectifs[index]['date_validation'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.objectifs[index]['valide'] = new_state
         
-        # Mise à jour visuelle du bouton (on le désactive)
-        self.boutons[index].configure(fg_color="#2c3e50", state="disabled", text=f"✅\n{self.objectifs[index]['titre']}")
+        # 2. Gestion de la date
+        if new_state:
+            # Si on valide, on met la date
+            self.objectifs[index]['date_validation'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            # Si on annule, on enlève la date (pour ne pas fausser l'historique plus tard)
+            self.objectifs[index]['date_validation'] = None
 
-        # Sauvegarde immédiate dans le JSON
+        # 3. Mise à jour Visuelle de la case
+        self.tiles[index].update_visuals(new_state)
+        
+        # 4. Sauvegarde et Recalcul
+        self.save_data()
+        self.update_progress_display()
+
+    def update_progress_display(self):
+        current_weight = sum(obj['poids'] for obj in self.objectifs if obj['valide'])
+        ratio = (current_weight / self.total_weight) if self.total_weight > 0 else 0
+        percent = int(ratio * 100)
+        
+        self.progress_bar.set(ratio)
+        self.lbl_progress.configure(text=f"Progression : {percent}% (XP: {current_weight}/{self.total_weight})")
+
+        thresholds = {"bronze": 0.25, "argent": 0.50, "or": 0.75, "platine": 1.0}
+        for key, limit in thresholds.items():
+            title_lbl, reward_lbl = self.reward_widgets[key]
+            if ratio >= limit:
+                title_lbl.configure(text_color="#2ecc71")
+                reward_lbl.configure(text_color="white")
+            else:
+                title_lbl.configure(text_color="gray")
+                reward_lbl.configure(text_color="gray60")
+
+    def save_data(self):
         with open(self.config_file, "w", encoding="utf-8") as f:
-            json.dump(self.data_global, f, indent=4, ensure_ascii=False)
+            json.dump(self.full_data, f, indent=4, ensure_ascii=False)
