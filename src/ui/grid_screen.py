@@ -12,11 +12,9 @@ class BingoTile(ctk.CTkButton):
         self.titre = data['titre']
         self.callback = on_click_callback
         
-        # Sauvegarde de la couleur d'origine pour pouvoir la remettre si on décoche
         self.colors = {1: "#27ae60", 2: "#f39c12", 3: "#c0392b"}
         self.base_color = self.colors.get(self.poids, "#3498db")
 
-        # Initialisation du bouton
         super().__init__(
             master,
             font=("Arial", 11, "bold"),
@@ -26,27 +24,17 @@ class BingoTile(ctk.CTkButton):
             command=self.on_click
         )
         
-        # On applique l'état visuel initial (Coché ou non)
         self.update_visuals(data['valide'])
 
     def on_click(self):
-        # On prévient le parent (GridScreen) qu'on a cliqué
         self.callback(self.index)
 
     def update_visuals(self, is_valid):
-        """Met à jour l'aspect du bouton selon son état"""
         if is_valid:
-            # Mode "Validé" : Gris foncé, Checkmark
-            self.configure(
-                fg_color="#2c3e50", 
-                text=f"✅\n{self.titre}"
-            )
+            self.configure(fg_color="#2c3e50", text=f"✅\n{self.titre}")
         else:
-            # Mode "Non validé" : Couleur d'origine, Etoiles
-            self.configure(
-                fg_color=self.base_color, 
-                text=f"{self.titre}\n{'★' * self.poids}"
-            )
+            self.configure(fg_color=self.base_color, text=f"{self.titre}\n{'★' * self.poids}")
+
 
 class GridScreen(ctk.CTkFrame):
     def __init__(self, master):
@@ -54,7 +42,7 @@ class GridScreen(ctk.CTkFrame):
         
         self.config_file = "data/bingo_config.json"
         
-        # Chargement
+        # Chargement des données
         with open(self.config_file, "r", encoding="utf-8") as f:
             self.full_data = json.load(f)
         
@@ -65,24 +53,49 @@ class GridScreen(ctk.CTkFrame):
         self.setup_ui()
         self.update_progress_display()
 
+    def get_days_remaining(self):
+        """Calcule le nombre de jours restants jusqu'à la fin de 2026."""
+        # Date cible : 31 Décembre 2026
+        target_date = datetime(2026, 12, 31)
+        now = datetime.now()
+        
+        delta = target_date - now
+        return max(0, delta.days) # On ne retourne pas de négatif
+
     def setup_ui(self):
         self.grid_columnconfigure(0, weight=3)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=10)
 
-        # HEADER
+        # --- HEADER AMÉLIORÉ ---
         self.header_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.header_frame.grid(row=0, column=0, columnspan=2, sticky="ew", padx=20, pady=(20, 10))
         
-        self.lbl_progress = ctk.CTkLabel(self.header_frame, text="Progression : 0%", font=("Arial", 20, "bold"))
-        self.lbl_progress.pack(anchor="w")
+        # On divise le header en 2 colonnes : Gauche (Progression), Droite (Temps)
+        self.header_frame.grid_columnconfigure(0, weight=1)
+        self.header_frame.grid_columnconfigure(1, weight=1)
 
+        # 1. Label Progression (Gauche)
+        self.lbl_progress = ctk.CTkLabel(self.header_frame, text="Progression : 0%", font=("Arial", 20, "bold"))
+        self.lbl_progress.grid(row=0, column=0, sticky="w")
+
+        # 2. Label Compte à rebours (Droite)
+        jours_restants = self.get_days_remaining()
+        self.lbl_timer = ctk.CTkLabel(
+            self.header_frame, 
+            text=f"⏳ J-{jours_restants}", 
+            font=("Arial", 20, "bold"),
+            text_color="#e74c3c" if jours_restants < 100 else "#3498db" # Rouge si urgence (<100 jours)
+        )
+        self.lbl_timer.grid(row=0, column=1, sticky="e")
+
+        # 3. Barre de progression (Dessous, prend toute la largeur)
         self.progress_bar = ctk.CTkProgressBar(self.header_frame, height=20)
         self.progress_bar.set(0)
-        self.progress_bar.pack(fill="x", pady=5)
+        self.progress_bar.grid(row=1, column=0, columnspan=2, sticky="ew", pady=10)
 
-        # GRILLE
+        # --- GRILLE ---
         self.grid_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.grid_frame.grid(row=1, column=0, sticky="nsew", padx=20, pady=10)
         
@@ -92,12 +105,11 @@ class GridScreen(ctk.CTkFrame):
 
         self.tiles = []
         for i, obj in enumerate(self.objectifs):
-            # Note : On passe la méthode toggle_objective
             tile = BingoTile(self.grid_frame, i, obj, self.toggle_objective)
             tile.grid(row=i//5, column=i%5, padx=5, pady=5, sticky="nsew")
             self.tiles.append(tile)
 
-        # SIDEBAR
+        # --- SIDEBAR ---
         self.sidebar = ctk.CTkFrame(self, fg_color="gray20", corner_radius=15)
         self.sidebar.grid(row=1, column=1, sticky="nsew", padx=20, pady=10)
         
@@ -120,25 +132,16 @@ class GridScreen(ctk.CTkFrame):
             self.reward_widgets[key] = (lbl_title, lbl_reward)
 
     def toggle_objective(self, index):
-        """Active ou Désactive une case"""
-        # 1. Inversion de l'état (True -> False ou False -> True)
         current_state = self.objectifs[index]['valide']
         new_state = not current_state
-        
         self.objectifs[index]['valide'] = new_state
         
-        # 2. Gestion de la date
         if new_state:
-            # Si on valide, on met la date
             self.objectifs[index]['date_validation'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         else:
-            # Si on annule, on enlève la date (pour ne pas fausser l'historique plus tard)
             self.objectifs[index]['date_validation'] = None
 
-        # 3. Mise à jour Visuelle de la case
         self.tiles[index].update_visuals(new_state)
-        
-        # 4. Sauvegarde et Recalcul
         self.save_data()
         self.update_progress_display()
 
