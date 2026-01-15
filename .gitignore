@@ -1,14 +1,16 @@
-# Python
+# --- Python Basics ---
 __pycache__/
 *.py[cod]
 *$py.class
-venv/
-.env
 
-# Données et Logs
-*.log
-save_progress.json
+# --- PyInstaller (Dossiers de construction) ---
+build/
+dist/
 
-# IDE
-.vscode/
-.idea/
+# --- Fichiers système ---
+.DS_Store
+Thumbs.db
+
+# --- Données Utilisateur (Pour ne pas envoyer ta progression perso) ---
+data/bingo_config.json
+data/bingo_default.csv
