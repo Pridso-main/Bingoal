@@ -2,6 +2,25 @@ import customtkinter as ctk
 import json
 from datetime import datetime
 
+# --- DÉFINITION DES COULEURS ET FONTS (THEME) ---
+THEME = {
+    "bg_main": "transparent",       # Fond principal
+    "bg_container": "#2b2b2b",      # Fond des panneaux (sidebar)
+    "accent_gold": "#F5C518",       # Couleur Or pour la progression
+    "accent_green": "#27ae60",      # Vert validation
+    "accent_red": "#e74c3c",        # Rouge urgence
+    "accent_purple": "#8e44ad",     # Violet bouton historique
+    "text_light": "#ffffff",        # Texte blanc
+    "text_gray": "#bdc3c7",         # Texte gris clair
+    "tile_valid_bg": "#1e3d2f",     # Fond case validée (vert sombre)
+    "tile_border_hover": "#F5C518", # Bordure dorée au survol
+}
+
+FONT_TITLE = ("Roboto", 24, "bold")  # Police plus grande pour titres
+FONT_HEADER = ("Roboto", 18, "bold") # Pour le header
+FONT_NORMAL = ("Roboto", 12)         # Texte standard
+FONT_TILE = ("Roboto", 11, "bold")   # Texte des tuiles
+
 class BingoTile(ctk.CTkButton):
     def __init__(self, master, index, data, on_click_callback):
         self.index = index
@@ -9,41 +28,72 @@ class BingoTile(ctk.CTkButton):
         self.titre = data['titre']
         self.callback = on_click_callback
         
-        self.colors = {1: "#27ae60", 2: "#f39c12", 3: "#c0392b"}
+        # Couleurs de base (Non validé) - Un peu plus pastels/modernes
+        self.colors = {
+            1: "#2ecc71", # Emerald
+            2: "#f1c40f", # Sunflower
+            3: "#e67e22"  # Carrot
+        }
         self.base_color = self.colors.get(self.poids, "#3498db")
 
         super().__init__(
             master,
-            font=("Arial", 11, "bold"),
+            font=FONT_TILE,
             border_width=2,
-            border_color="#34495e",
-            hover_color="#34495e",
+            border_color=THEME["bg_container"], # Bordure discrète par défaut
+            corner_radius=12, # Angles plus arrondis
+            hover_color=self.base_color, # Reste sur la couleur de base au survol si non validé
             command=self.on_click
         )
         
+        # Effet de survol personnalisé : Bordure dorée
+        self.bind("<Enter>", self.on_enter)
+        self.bind("<Leave>", self.on_leave)
+        
         self.update_visuals(data['valide'])
 
+    # --- Effets de survol ---
+    def on_enter(self, event):
+        if self._state != "disabled":
+            self.configure(border_color=THEME["tile_border_hover"])
+            
+    def on_leave(self, event):
+        if self._state != "disabled":
+             # Retour à la couleur selon l'état
+            color = THEME["accent_gold"] if self.cget("text").startswith("✅") else THEME["bg_container"]
+            self.configure(border_color=color)
+
     def on_click(self):
-        # On ne déclenche l'action que si le bouton n'est pas désactivé (disabled)
         if self._state != "disabled":
             self.callback(self.index)
 
     def update_visuals(self, is_valid):
         if is_valid:
-            self.configure(fg_color="#2c3e50", text=f"✅\n{self.titre}")
+            # Look Validé : Fond vert sombre, texte doré, bordure dorée
+            self.configure(
+                fg_color=THEME["tile_valid_bg"], 
+                text_color=THEME["accent_gold"],
+                border_color=THEME["accent_gold"],
+                text=f"✅\n{self.titre}"
+            )
         else:
-            self.configure(fg_color=self.base_color, text=f"{self.titre}\n{'★' * self.poids}")
+            # Look Non Validé : Couleur de difficulté, bordure discrète
+            self.configure(
+                fg_color=self.base_color,
+                text_color=THEME["text_light"],
+                border_color=THEME["bg_container"],
+                text=f"{self.titre}\n{'★' * self.poids}"
+            )
 
 
 class GridScreen(ctk.CTkFrame):
     def __init__(self, master, on_recap_callback=None):
-        super().__init__(master)
+        super().__init__(master, fg_color=THEME["bg_main"])
         self.on_recap_callback = on_recap_callback
         
         self.config_file = "data/bingo_config.json"
-        self.game_over = False # ### NOUVEAU : Pour savoir si le jeu est fini (Temps écoulé)
+        self.game_over = False
         
-        # Chargement
         with open(self.config_file, "r", encoding="utf-8") as f:
             self.full_data = json.load(f)
         
@@ -51,7 +101,6 @@ class GridScreen(ctk.CTkFrame):
         self.recompenses = self.full_data['recompenses']
         self.total_weight = sum(obj['poids'] for obj in self.objectifs)
 
-        # Vérification du temps AVANT de créer l'interface
         self.days_remaining = self.get_days_remaining()
         if self.days_remaining == 0:
             self.game_over = True
@@ -59,7 +108,6 @@ class GridScreen(ctk.CTkFrame):
         self.setup_ui()
         self.update_progress_display()
         
-        # ### NOUVEAU : Si le temps est fini, on bloque tout dès le début
         if self.game_over:
             self.disable_grid()
 
@@ -70,46 +118,50 @@ class GridScreen(ctk.CTkFrame):
         return max(0, delta.days)
 
     def setup_ui(self):
+        # Ajout de padding global autour de tout l'écran
+        self.pack(padx=20, pady=20)
+
         self.grid_columnconfigure(0, weight=3)
         self.grid_columnconfigure(1, weight=1)
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=10)
+        self.grid_rowconfigure(0, weight=0) # Header ne prend que la place nécessaire
+        self.grid_rowconfigure(1, weight=1) # Le reste prend tout l'espace
 
-        # HEADER
+        # --- HEADER (Design plus aéré) ---
         self.header_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.header_frame.grid(row=0, column=0, columnspan=2, sticky="ew", padx=20, pady=(20, 10))
+        self.header_frame.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 20))
         self.header_frame.grid_columnconfigure(0, weight=1)
         self.header_frame.grid_columnconfigure(1, weight=1)
 
-        self.lbl_progress = ctk.CTkLabel(self.header_frame, text="Progression : 0%", font=("Arial", 20, "bold"))
+        # 1. Label Progression (Plus gros)
+        self.lbl_progress = ctk.CTkLabel(self.header_frame, text="Progression : 0%", font=FONT_TITLE, text_color=THEME["accent_gold"])
         self.lbl_progress.grid(row=0, column=0, sticky="w")
 
-        # Label Timer avec gestion "FINI"
+        # 2. Label Compte à rebours (Plus gros)
         txt_timer = f"⏳ J-{self.days_remaining}" if not self.game_over else "🏁 TERMINE"
-        color_timer = "#e74c3c" if self.days_remaining < 100 or self.game_over else "#3498db"
+        color_timer = THEME["accent_red"] if self.days_remaining < 100 or self.game_over else THEME["text_light"]
         
-        self.lbl_timer = ctk.CTkLabel(
-            self.header_frame, 
-            text=txt_timer, 
-            font=("Arial", 20, "bold"),
-            text_color=color_timer
-        )
+        self.lbl_timer = ctk.CTkLabel(self.header_frame, text=txt_timer, font=FONT_TITLE, text_color=color_timer)
         self.lbl_timer.grid(row=0, column=1, sticky="e")
 
+        # 3. Bouton Historique (Plus moderne)
         self.btn_history = ctk.CTkButton(
-            self.header_frame, text="📜 Historique", width=100,
-            fg_color="#8e44ad", hover_color="#9b59b6",
+            self.header_frame, text="📜 Historique", width=120, height=35,
+            fg_color=THEME["accent_purple"], hover_color="#9b59b6",
+            font=FONT_NORMAL, corner_radius=8,
             command=self.open_recap
         )
-        self.btn_history.grid(row=0, column=2, sticky="e", padx=10)
+        self.btn_history.grid(row=0, column=2, sticky="e", padx=(20, 0))
 
-        self.progress_bar = ctk.CTkProgressBar(self.header_frame, height=20)
+        # 4. Barre de progression (Dorée et plus épaisse)
+        self.progress_bar = ctk.CTkProgressBar(self.header_frame, height=15, corner_radius=8)
         self.progress_bar.set(0)
-        self.progress_bar.grid(row=1, column=0, columnspan=2, sticky="ew", pady=10)
+        self.progress_bar.configure(progress_color=THEME["accent_gold"]) # Couleur OR
+        self.progress_bar.grid(row=1, column=0, columnspan=3, sticky="ew", pady=(15, 0))
 
-        # GRILLE
+        # --- GRILLE ---
         self.grid_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.grid_frame.grid(row=1, column=0, sticky="nsew", padx=20, pady=10)
+        # Ajout de padding à droite pour séparer de la sidebar
+        self.grid_frame.grid(row=1, column=0, sticky="nsew", padx=(0, 20))
         
         for i in range(5):
             self.grid_frame.grid_columnconfigure(i, weight=1)
@@ -118,28 +170,34 @@ class GridScreen(ctk.CTkFrame):
         self.tiles = []
         for i, obj in enumerate(self.objectifs):
             tile = BingoTile(self.grid_frame, i, obj, self.toggle_objective)
-            tile.grid(row=i//5, column=i%5, padx=5, pady=5, sticky="nsew")
+            # Plus d'espace entre les tuiles (padx/pady 5 -> 8)
+            tile.grid(row=i//5, column=i%5, padx=8, pady=8, sticky="nsew")
             self.tiles.append(tile)
 
-        # SIDEBAR
-        self.sidebar = ctk.CTkFrame(self, fg_color="gray20", corner_radius=15)
-        self.sidebar.grid(row=1, column=1, sticky="nsew", padx=20, pady=10)
+        # --- SIDEBAR (Nouveau look "Carte flottante") ---
+        self.sidebar = ctk.CTkFrame(self, fg_color=THEME["bg_container"], corner_radius=20, border_width=1, border_color="#333333")
+        self.sidebar.grid(row=1, column=1, sticky="nsew")
         
-        ctk.CTkLabel(self.sidebar, text="🏆 Paliers & Cadeaux", font=("Arial", 16, "bold")).pack(pady=20)
+        # Titre sidebar avec une icône et couleur or
+        header_sidebar = ctk.CTkFrame(self.sidebar, fg_color="transparent")
+        header_sidebar.pack(pady=(20, 10))
+        ctk.CTkLabel(header_sidebar, text="🏆", font=("Arial", 28)).pack()
+        ctk.CTkLabel(header_sidebar, text="PALIERS & CADEAUX", font=FONT_HEADER, text_color=THEME["accent_gold"]).pack()
         
         self.reward_widgets = {}
         paliers_order = ["bronze", "argent", "or", "platine"]
         emojis = {"bronze": "🥉", "argent": "🥈", "or": "🥇", "platine": "💎"}
         
         for key in paliers_order:
+            # Conteneur de récompense plus aéré
             container = ctk.CTkFrame(self.sidebar, fg_color="transparent")
-            container.pack(fill="x", padx=10, pady=10)
+            container.pack(fill="x", padx=15, pady=12) # Plus d'espace vertical
             
-            lbl_title = ctk.CTkLabel(container, text=f"{emojis[key]} {key.capitalize()}", font=("Arial", 14, "bold"), text_color="gray")
+            lbl_title = ctk.CTkLabel(container, text=f"{emojis[key]} {key.capitalize()}", font=FONT_HEADER, text_color=THEME["text_gray"])
             lbl_title.pack(anchor="w")
             
-            lbl_reward = ctk.CTkLabel(container, text=self.recompenses.get(key, "???"), font=("Arial", 12), text_color="gray60", wraplength=180, justify="left")
-            lbl_reward.pack(anchor="w", padx=10)
+            lbl_reward = ctk.CTkLabel(container, text=self.recompenses.get(key, "???"), font=FONT_NORMAL, text_color=THEME["text_gray"], wraplength=180, justify="left")
+            lbl_reward.pack(anchor="w", padx=(25,0), pady=(5,0)) # Décalage du texte
             
             self.reward_widgets[key] = (lbl_title, lbl_reward)
 
@@ -148,9 +206,7 @@ class GridScreen(ctk.CTkFrame):
             self.on_recap_callback()
 
     def toggle_objective(self, index):
-        # ### NOUVEAU : On empêche de cliquer si le jeu est fini
-        if self.game_over:
-            return
+        if self.game_over: return
 
         current_state = self.objectifs[index]['valide']
         new_state = not current_state
@@ -165,9 +221,7 @@ class GridScreen(ctk.CTkFrame):
         self.save_data()
         self.update_progress_display()
         
-        # ### NOUVEAU : On vérifie si c'est la victoire !
-        if new_state: # Seulement si on vient de cocher (pas décocher)
-            self.check_victory()
+        if new_state: self.check_victory()
 
     def update_progress_display(self):
         current_weight = sum(obj['poids'] for obj in self.objectifs if obj['valide'])
@@ -175,56 +229,53 @@ class GridScreen(ctk.CTkFrame):
         percent = int(ratio * 100)
         
         self.progress_bar.set(ratio)
-        self.lbl_progress.configure(text=f"Progression : {percent}% (XP: {current_weight}/{self.total_weight})")
+        self.lbl_progress.configure(text=f"Progression : {percent}%") # Simplifié
 
         thresholds = {"bronze": 0.25, "argent": 0.50, "or": 0.75, "platine": 1.0}
         for key, limit in thresholds.items():
             title_lbl, reward_lbl = self.reward_widgets[key]
             if ratio >= limit:
-                title_lbl.configure(text_color="#2ecc71")
-                reward_lbl.configure(text_color="white")
+                # Palier atteint : Or brillant
+                title_lbl.configure(text_color=THEME["accent_gold"])
+                reward_lbl.configure(text_color=THEME["text_light"])
             else:
-                title_lbl.configure(text_color="gray")
-                reward_lbl.configure(text_color="gray60")
-        
-        return ratio # Retourne le ratio pour check_victory
+                # Non atteint : Gris discret
+                title_lbl.configure(text_color=THEME["text_gray"])
+                reward_lbl.configure(text_color=THEME["text_gray"])
+        return ratio
 
-    # ### NOUVEAU : Méthode pour désactiver la grille
     def disable_grid(self):
-        """Désactive tous les boutons de la grille (Mode Lecture Seule)"""
         for tile in self.tiles:
             tile.configure(state="disabled")
         
-        # On affiche un petit message
         victory_label = ctk.CTkLabel(self.grid_frame, text="🔒 BINGO TERMINÉ\nDate limite dépassée", 
-                                     font=("Arial", 30, "bold"), text_color="#e74c3c", fg_color="#2c3e50", corner_radius=20)
+                                     font=FONT_TITLE, text_color=THEME["accent_red"], fg_color=THEME["bg_container"], corner_radius=20)
         victory_label.place(relx=0.5, rely=0.5, anchor="center")
 
-    # ### NOUVEAU : Popup de Victoire
     def check_victory(self):
-        """Vérifie si on a atteint 100%"""
         ratio = self.update_progress_display()
         if ratio >= 1.0:
             self.show_victory_popup()
 
     def show_victory_popup(self):
-        # Création d'une fenêtre secondaire (Toplevel)
         popup = ctk.CTkToplevel(self)
         popup.title("FÉLICITATIONS !")
-        popup.geometry("400x300")
-        popup.attributes("-topmost", True) # Reste au dessus
+        popup.geometry("450x350")
+        popup.attributes("-topmost", True)
+        popup.configure(fg_color=THEME["bg_container"]) # Fond sombre
         
-        # Design Festif
-        ctk.CTkLabel(popup, text="🎉", font=("Arial", 60)).pack(pady=10)
-        ctk.CTkLabel(popup, text="BINGO COMPLET !", font=("Arial", 24, "bold"), text_color="#f1c40f").pack()
+        ctk.CTkLabel(popup, text="🎉", font=("Arial", 70)).pack(pady=(20,10))
+        ctk.CTkLabel(popup, text="BINGO COMPLET !", font=FONT_TITLE, text_color=THEME["accent_gold"]).pack()
         ctk.CTkLabel(popup, text="Vous avez atteint le niveau PLATINE.\nL'année 2026 est un succès total.", 
-                     font=("Arial", 14), text_color="gray80").pack(pady=10)
+                     font=FONT_NORMAL, text_color=THEME["text_gray"]).pack(pady=10)
         
         recompense_platine = self.recompenses.get("platine", "Inconnu")
         ctk.CTkLabel(popup, text=f"Récompense débloquée :\n✨ {recompense_platine} ✨", 
-                     font=("Arial", 16, "bold"), text_color="#2ecc71").pack(pady=20)
+                     font=FONT_HEADER, text_color=THEME["accent_green"]).pack(pady=20)
                      
-        ctk.CTkButton(popup, text="Je suis une légende 😎", command=popup.destroy, fg_color="#e74c3c").pack(pady=10)
+        ctk.CTkButton(popup, text="Je suis une légende 😎", command=popup.destroy, 
+                      fg_color=THEME["accent_gold"], hover_color="#d4a915", 
+                      text_color=THEME["bg_container"], font=FONT_HEADER, height=40, corner_radius=20).pack(pady=10)
 
     def save_data(self):
         with open(self.config_file, "w", encoding="utf-8") as f:
