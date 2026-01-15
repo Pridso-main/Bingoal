@@ -3,9 +3,6 @@ import json
 from datetime import datetime
 
 class BingoTile(ctk.CTkButton):
-    """
-    Une tuile de Bingo intelligente (Switch ON/OFF).
-    """
     def __init__(self, master, index, data, on_click_callback):
         self.index = index
         self.poids = data['poids']
@@ -27,7 +24,9 @@ class BingoTile(ctk.CTkButton):
         self.update_visuals(data['valide'])
 
     def on_click(self):
-        self.callback(self.index)
+        # On ne déclenche l'action que si le bouton n'est pas désactivé (disabled)
+        if self._state != "disabled":
+            self.callback(self.index)
 
     def update_visuals(self, is_valid):
         if is_valid:
@@ -37,13 +36,14 @@ class BingoTile(ctk.CTkButton):
 
 
 class GridScreen(ctk.CTkFrame):
-    def __init__(self, master, on_recap_callback=None): # <--- CORRECTION ICI
+    def __init__(self, master, on_recap_callback=None):
         super().__init__(master)
-        self.on_recap_callback = on_recap_callback      # <--- ET ICI
+        self.on_recap_callback = on_recap_callback
         
         self.config_file = "data/bingo_config.json"
+        self.game_over = False # ### NOUVEAU : Pour savoir si le jeu est fini (Temps écoulé)
         
-        # Chargement des données
+        # Chargement
         with open(self.config_file, "r", encoding="utf-8") as f:
             self.full_data = json.load(f)
         
@@ -51,11 +51,19 @@ class GridScreen(ctk.CTkFrame):
         self.recompenses = self.full_data['recompenses']
         self.total_weight = sum(obj['poids'] for obj in self.objectifs)
 
+        # Vérification du temps AVANT de créer l'interface
+        self.days_remaining = self.get_days_remaining()
+        if self.days_remaining == 0:
+            self.game_over = True
+
         self.setup_ui()
         self.update_progress_display()
+        
+        # ### NOUVEAU : Si le temps est fini, on bloque tout dès le début
+        if self.game_over:
+            self.disable_grid()
 
     def get_days_remaining(self):
-        """Calcule le nombre de jours restants jusqu'à la fin de 2026."""
         target_date = datetime(2026, 12, 31)
         now = datetime.now()
         delta = target_date - now
@@ -67,44 +75,39 @@ class GridScreen(ctk.CTkFrame):
         self.grid_rowconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=10)
 
-        # --- HEADER AMÉLIORÉ ---
+        # HEADER
         self.header_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.header_frame.grid(row=0, column=0, columnspan=2, sticky="ew", padx=20, pady=(20, 10))
-        
         self.header_frame.grid_columnconfigure(0, weight=1)
         self.header_frame.grid_columnconfigure(1, weight=1)
 
-        # 1. Label Progression
         self.lbl_progress = ctk.CTkLabel(self.header_frame, text="Progression : 0%", font=("Arial", 20, "bold"))
         self.lbl_progress.grid(row=0, column=0, sticky="w")
 
-        # 2. Label Compte à rebours
-        jours_restants = self.get_days_remaining()
+        # Label Timer avec gestion "FINI"
+        txt_timer = f"⏳ J-{self.days_remaining}" if not self.game_over else "🏁 TERMINE"
+        color_timer = "#e74c3c" if self.days_remaining < 100 or self.game_over else "#3498db"
+        
         self.lbl_timer = ctk.CTkLabel(
             self.header_frame, 
-            text=f"⏳ J-{jours_restants}", 
+            text=txt_timer, 
             font=("Arial", 20, "bold"),
-            text_color="#e74c3c" if jours_restants < 100 else "#3498db"
+            text_color=color_timer
         )
         self.lbl_timer.grid(row=0, column=1, sticky="e")
 
-        # 3. Bouton Historique
         self.btn_history = ctk.CTkButton(
-            self.header_frame, 
-            text="📜 Historique", 
-            width=100,
-            fg_color="#8e44ad", 
-            hover_color="#9b59b6",
+            self.header_frame, text="📜 Historique", width=100,
+            fg_color="#8e44ad", hover_color="#9b59b6",
             command=self.open_recap
         )
         self.btn_history.grid(row=0, column=2, sticky="e", padx=10)
 
-        # 4. Barre de progression
         self.progress_bar = ctk.CTkProgressBar(self.header_frame, height=20)
         self.progress_bar.set(0)
         self.progress_bar.grid(row=1, column=0, columnspan=2, sticky="ew", pady=10)
 
-        # --- GRILLE ---
+        # GRILLE
         self.grid_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.grid_frame.grid(row=1, column=0, sticky="nsew", padx=20, pady=10)
         
@@ -118,7 +121,7 @@ class GridScreen(ctk.CTkFrame):
             tile.grid(row=i//5, column=i%5, padx=5, pady=5, sticky="nsew")
             self.tiles.append(tile)
 
-        # --- SIDEBAR ---
+        # SIDEBAR
         self.sidebar = ctk.CTkFrame(self, fg_color="gray20", corner_radius=15)
         self.sidebar.grid(row=1, column=1, sticky="nsew", padx=20, pady=10)
         
@@ -140,11 +143,15 @@ class GridScreen(ctk.CTkFrame):
             
             self.reward_widgets[key] = (lbl_title, lbl_reward)
 
-    def open_recap(self): # <--- CORRECTION : Bien aligné à gauche
+    def open_recap(self):
         if self.on_recap_callback:
             self.on_recap_callback()
 
     def toggle_objective(self, index):
+        # ### NOUVEAU : On empêche de cliquer si le jeu est fini
+        if self.game_over:
+            return
+
         current_state = self.objectifs[index]['valide']
         new_state = not current_state
         self.objectifs[index]['valide'] = new_state
@@ -157,6 +164,10 @@ class GridScreen(ctk.CTkFrame):
         self.tiles[index].update_visuals(new_state)
         self.save_data()
         self.update_progress_display()
+        
+        # ### NOUVEAU : On vérifie si c'est la victoire !
+        if new_state: # Seulement si on vient de cocher (pas décocher)
+            self.check_victory()
 
     def update_progress_display(self):
         current_weight = sum(obj['poids'] for obj in self.objectifs if obj['valide'])
@@ -175,6 +186,45 @@ class GridScreen(ctk.CTkFrame):
             else:
                 title_lbl.configure(text_color="gray")
                 reward_lbl.configure(text_color="gray60")
+        
+        return ratio # Retourne le ratio pour check_victory
+
+    # ### NOUVEAU : Méthode pour désactiver la grille
+    def disable_grid(self):
+        """Désactive tous les boutons de la grille (Mode Lecture Seule)"""
+        for tile in self.tiles:
+            tile.configure(state="disabled")
+        
+        # On affiche un petit message
+        victory_label = ctk.CTkLabel(self.grid_frame, text="🔒 BINGO TERMINÉ\nDate limite dépassée", 
+                                     font=("Arial", 30, "bold"), text_color="#e74c3c", fg_color="#2c3e50", corner_radius=20)
+        victory_label.place(relx=0.5, rely=0.5, anchor="center")
+
+    # ### NOUVEAU : Popup de Victoire
+    def check_victory(self):
+        """Vérifie si on a atteint 100%"""
+        ratio = self.update_progress_display()
+        if ratio >= 1.0:
+            self.show_victory_popup()
+
+    def show_victory_popup(self):
+        # Création d'une fenêtre secondaire (Toplevel)
+        popup = ctk.CTkToplevel(self)
+        popup.title("FÉLICITATIONS !")
+        popup.geometry("400x300")
+        popup.attributes("-topmost", True) # Reste au dessus
+        
+        # Design Festif
+        ctk.CTkLabel(popup, text="🎉", font=("Arial", 60)).pack(pady=10)
+        ctk.CTkLabel(popup, text="BINGO COMPLET !", font=("Arial", 24, "bold"), text_color="#f1c40f").pack()
+        ctk.CTkLabel(popup, text="Vous avez atteint le niveau PLATINE.\nL'année 2026 est un succès total.", 
+                     font=("Arial", 14), text_color="gray80").pack(pady=10)
+        
+        recompense_platine = self.recompenses.get("platine", "Inconnu")
+        ctk.CTkLabel(popup, text=f"Récompense débloquée :\n✨ {recompense_platine} ✨", 
+                     font=("Arial", 16, "bold"), text_color="#2ecc71").pack(pady=20)
+                     
+        ctk.CTkButton(popup, text="Je suis une légende 😎", command=popup.destroy, fg_color="#e74c3c").pack(pady=10)
 
     def save_data(self):
         with open(self.config_file, "w", encoding="utf-8") as f:
